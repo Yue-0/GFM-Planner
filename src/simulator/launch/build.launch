@@ -1,0 +1,24 @@
+<launch>
+
+    <!-- Author: YueLin -->
+
+    <arg name="height" default="0.5" />
+    <arg name="num_threads" default="16" />
+    <arg name="stl" default="$(find simulator)/models/world/world.stl" />
+    <arg name="png" default="$(find simulator)/models/world/metric.png" />
+
+    <include file="$(find simulator)/launch/map.launch" />
+
+    <node name="map2stl" pkg="simulator" type="architect.py" output="screen" >
+        <param name="topic" value="/map" type="string" />
+        <param name="output" value="$(arg stl)" type="string" />
+        <param name="height" value="$(arg height)" type="double" />
+    </node>
+
+    <node name="metric" pkg="simulator" type="metric.py" output="screen" >
+        <param name="topic" value="/map" type="string" />
+        <param name="output" value="$(arg png)" type="string" />
+        <param name="num_threads" value="$(arg num_threads)" type="int" />
+    </node>
+
+</launch>

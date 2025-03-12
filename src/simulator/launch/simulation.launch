@@ -1,0 +1,78 @@
+<launch>
+
+	<!-- Author: YueLin -->
+
+    <arg name="gui" default="false" />
+	<arg name="blind" default="0.75" />
+	<arg name="init_x" default="1.0" />
+	<arg name="init_y" default="1.0" />
+
+	<env name="GAZEBO_MODEL_PATH" 
+		 value="$(find simulator)/models:$(optenv GAZEBO_MODEL_PATH)" />
+
+	<include file="$(find simulator)/launch/map.launch" />
+
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="gui" value="$(arg gui)" />
+		<arg name="world_name" 
+			 value="$(find simulator)/models/world/world.sdf" />
+	</include>
+
+	<include file="$(find simulator)/launch/localization.launch">
+        <arg name="scan" value="/laser" />
+    </include>
+
+	<rosparam file="$(find simulator)/models/robot/control.yaml" 
+			  command="load" />
+	<param name="robot_description"
+		   command="$(find xacro)/xacro 
+		   		   '$(find simulator)/models/robot/robot.xacro'" />
+    
+	<node name="controller_spawner" pkg="controller_manager" 
+		  type="spawner" respawn="false" output="screen" 
+		  ns="/mobile_base" args="joint_state_controller" />
+  
+	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" respawn="false"
+		  args="-unpause -urdf -param robot_description -model robot 
+		  		-x $(arg init_x) -y $(arg init_y)" />
+
+	<node pkg="robot_state_publisher"
+		  name="robot_state_publisher"
+		  type="robot_state_publisher" >
+		<param name="publish_frequency" type="double" value="30.0" />
+	</node>
+
+	<node pkg="joint_state_publisher"
+		  name="joint_state_publisher"
+		  type="joint_state_publisher" />
+
+	<node name="visualizer" pkg="simulator" type="map" >
+		<param name="frame" value="map" type="string" />
+		<param name="topic" value="/map" type="string" />
+		<param name="height" value="0.5" type="double" />
+	</node>
+
+	<node name="localization" pkg="simulator" type="localization.py">
+		<param name="hz" value="50" type="double" />
+		<param name="map_frame" value="map" type="string" />
+		<param name="robot_frame" value="base_link" type="string" />
+	</node>
+	
+	<node name="initialpose" pkg="simulator" type="initialpose.py">
+		<param name="time" value="1" type="double" />
+		<param name="map" value="map" type="string" />
+		<param name="init_yaw" value="0" type="double" />
+		<param name="init_x" value="$(arg init_x)" type="double" />
+		<param name="init_y" value="$(arg init_y)" type="double" />
+	</node>
+
+	<node name="fov" pkg="simulator" type="lidar.py">
+		<param name="from" value="/scan" type="string" />
+		<param name="publish" value="/laser" type="string" />
+		<param name="crop" value="$(arg blind)" type="double" />
+	</node>
+
+    <node name="rviz" pkg="rviz" type="rviz"
+          args="-d $(find simulator)/rviz/rviz.rviz" />
+
+</launch>

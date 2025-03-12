@@ -1,0 +1,4 @@
+build/
+devel/
+src/simulator/models/world/world.stl
+src/simulator/models/world/metric.png

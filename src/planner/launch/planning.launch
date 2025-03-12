@@ -1,0 +1,57 @@
+<launch>
+
+    <!-- Author: Yue Lin -->
+
+    <arg name="robot_frame" default="base_link" />
+    <arg name="metric" default="$(find simulator)/models/world/metric.png" />
+
+    <!-- Costmap -->
+    <node name="costmap" pkg="planner" type="costmap" output="screen" >
+        <param name="update_rate" value="10" type="int" />
+        <param name="expansion" value="0.35" type="double" />
+        <param name="attenuation" value="0.25" type="double" />
+        <param name="metric" value="$(arg metric)" type="string" />
+        <param name="robot_frame" value="$(arg robot_frame)" type="string" />
+    </node>
+
+    <!-- Planner -->
+    <node name="planner" pkg="planner" type="planner" output="screen" >
+        
+        <param name="alpha" value="1.0" type="double" />
+        <param name="blind" value="0.75" type="double" />
+        <param name="epsilon" value="1.0" type="double" />
+
+        <param name="control_hz" value="10.0" type="double" />
+        <param name="replan_interval" value="0.1" type="double" />
+        <param name="control_accuracy" value="0.35" type="double" />
+
+        <param name="kappa" value="16" type="int" />
+        <param name="minco_s" value="3" type="int" />
+        <param name="max_duration" value="1.0" type="double" />
+        <param name="safe_distance" value="0.4" type="double" />
+
+        <param name="err_dist" value="0.25" type="double" />
+        <param name="err_angle" value="0.1" type="double" />
+
+        <param name="lambda_s" value="1.0" type="double" />
+        <param name="lambda_l" value="1.0" type="double" />
+        <param name="lambda_p" value="1e4" type="double" />
+        <param name="lambda_t" value="20.0" type="double" />
+        
+        <param name="max_vel" value="1.0" type="double" />
+        <param name="max_acc" value="10.0" type="double" />
+        <param name="max_omega" value="1.0" type="double" />
+        <param name="max_alpha" value="1.0" type="double" />
+
+        <param name="lbfgs_memory" value="256" type="int" />
+        <param name="lbfgs_delta" value="1e-5" type="double" />
+        <param name="lbfgs_min_step" value="1e-32" type="double" />
+
+        <param name="map_frame" value="map" type="string" />
+        <param name="odom_frame" value="odom" type="string" />
+
+        <param name="metric" value="$(arg metric)" type="string" />
+
+    </node>
+
+</launch>

@@ -1,0 +1,107 @@
+<?xml version="1.0" ?>
+
+<!-- Author: YueLin -->
+
+<robot name="rect" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:property name="robot_mass" value="15" />
+    <xacro:property name="robot_size" value="0.5" />
+    <xacro:property name="robot_height" value="0.1" />
+
+    <xacro:property name="PI" value="3.141592653589793" />
+
+    <xacro:macro name="box_inertial_matrix" params="m l h w">
+        <inertial>
+            <mass value="${m}" />
+            <inertia ixx="${(m * (l * l + h * h)) / 12}" iyz="0"
+                     iyy="${(m * (w * w + h * h)) / 12}" ixz="0"
+                     izz="${(m * (w * w + l * l)) / 12}" ixy="0" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="cylinder_inertial_matrix" params="m r h xyz rpy">
+        <inertial>
+            <mass value="${m}" />
+            <origin xyz="${xyz}" rpy="${rpy}" />
+            <inertia izz="${m * r * r / 2}" ixy="0"
+                     ixx="${m * (3 * r * r + h * h) / 12}" iyz="0" 
+                     iyy="${m * (3 * r * r + h * h) / 12}" ixz="0" />
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="wheel_link" params="name x">
+        <link name="${name}">
+            <pose>0 0 0 0 0 0</pose>
+            <collision>
+                <origin xyz="${x} 0 0" rpy="0 ${PI / 2} 0" />
+                <geometry>
+                    <cylinder length="${robot_size / 10}"
+                              radius="${robot_size / 10}" />
+                </geometry>
+            </collision>
+            <xacro:cylinder_inertial_matrix m="0.525"
+                                            h="${robot_size / 10}"
+                                            r="${robot_size / 10}"
+                                            xyz="${x} 0 0" rpy="0 ${PI / 2} 0" />
+        </link>
+    </xacro:macro>
+
+    <xacro:macro name="wheel_joint" params="name x y">
+        <joint name="${name}_joint" type="fixed">
+            <child link="${name}" />
+            <parent link="base_link" />
+            <origin xyz="${x} ${y} -0.045" rpy="0 0 ${PI / 2}" />
+        </joint>
+    </xacro:macro>
+
+    <link name="base_link">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 ${PI / 2}" />
+            <geometry>
+                <mesh filename="package://simulator/models/robot/robot.dae" 
+                      scale="${robot_size / 2} ${robot_size / 3} ${robot_size / 3}" 
+                />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="${robot_size} ${robot_size} ${robot_height}" />
+            </geometry>
+        </collision>
+        <xacro:box_inertial_matrix m="${robot_mass}" 
+         l="${robot_size}" h="${robot_height}" w="${robot_size}" />
+    </link>
+
+    <link name="lidar">
+        <pose>0 0 0 0 0 0</pose>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder radius="0.03" length="0.03" />
+            </geometry>
+        </collision>
+        <xacro:cylinder_inertial_matrix m="0.2" r="0.03" h="0.03" 
+                                        xyz="0 0 0" rpy="0 ${PI / 2} 0" />
+    </link>
+
+    <xacro:wheel_link name="left_back_wheel" x="0.02" />
+    <xacro:wheel_link name="left_front_wheel" x="0.02" />
+    <xacro:wheel_link name="right_back_wheel" x="-0.02" />
+    <xacro:wheel_link name="right_front_wheel" x="-0.02" />
+
+    <xacro:wheel_joint name="left_front_wheel"
+                       x="${robot_size / 3}" y="${robot_size / 2}" />
+    <xacro:wheel_joint name="left_back_wheel"
+                       x="${-robot_size / 3}" y="${robot_size / 2}" />
+    <xacro:wheel_joint name="right_front_wheel"
+                       x="${robot_size / 3}" y="${-robot_size / 2}" />
+    <xacro:wheel_joint name="right_back_wheel"
+                       x="${-robot_size / 3}" y="${-robot_size / 2}" />
+    
+    <joint name="lidar_joint" type="fixed">
+        <origin xyz="0.15 0 0.2" rpy="0 0 0" />
+        <parent link="base_link" />
+        <child link="lidar" />
+    </joint>
+
+</robot>
