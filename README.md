@@ -8,7 +8,7 @@ GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric 
 
 ## Video
 
-<!-- __Video__: Coming soon. -->
+https://github.com/user-attachments/assets/859af1e7-2bbc-4ee0-b38c-bcda333494cf
 
 ## Quick Start
 
