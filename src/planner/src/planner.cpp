@@ -194,10 +194,9 @@ int main(int argc, char* argv[])
 
             /* Percepotion-aware trajectory planning */
             ROS_INFO("Start planning.");
-            path.header.stamp = ros::Time::now();
-            times[0] = path.header.stamp.toSec();
+            ros::Time time = ros::Time::now();
             std::vector<SE2> points = planner.plan(&gfm, map, start, end);
-            times[0] = ros::Time::now().toSec() - times[0];
+            times[0] = (ros::Time::now() - time).toSec();
             gfm_planner::sampling(gfm.resolution, map, points);
             if(optimizer.setup(points, states))
             {
@@ -207,6 +206,7 @@ int main(int argc, char* argv[])
             }
             else
                 ROS_WARN("Planning failed");
+            path.header.stamp = time;
             ROS_INFO("Planning completed.");
             ROS_INFO("Path time: %fs", times[0]);
             ROS_INFO("Optimization time: %fs.", times[1]);
@@ -240,9 +240,9 @@ int main(int argc, char* argv[])
                 vel = trajectory.vel(t);
 
             double sin = std::sin(start.yaw), cos = std::cos(start.yaw);
-            velocity.linear.x = cos * vel(0) + sin * vel(1);
-            velocity.linear.y = cos * vel(1) - sin * vel(0);
-            velocity.angular.z = vel(2);
+            velocity.linear.x = cos * vel[0] + sin * vel[1];
+            velocity.linear.y = cos * vel[1] - sin * vel[0];
+            velocity.angular.z = vel[2];
             control.publish(velocity);
         }
     );

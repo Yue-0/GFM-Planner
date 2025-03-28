@@ -1,4 +1,6 @@
 build/
 devel/
+.vscode/
+.catkin_workspace
 src/simulator/models/world/world.stl
 src/simulator/models/world/metric.png
