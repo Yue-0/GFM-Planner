@@ -159,16 +159,6 @@ int main(int argc, char* argv[])
         }
     );
 
-    /* Subscribe velocity */
-    ros::Subscriber kinetic = nh.subscribe<geometry_msgs::Twist>(
-        "/cmd_vel", 1, [&states](geometry_msgs::Twist::ConstPtr cmd)
-        {
-            states[0](0, 1) = cmd->linear.x;
-            states[0](1, 1) = cmd->linear.y;
-            states[0](2, 1) = cmd->angular.z;
-        }
-    );
-
     /* Main loop */
     ros::Timer planning = nh.createTimer(
         ros::Duration(REPLAN), [
@@ -230,7 +220,7 @@ int main(int argc, char* argv[])
 
     ros::Timer controller = nh.createTimer(
         ros::Duration(DT), [
-            &trajectory, &start, &velocity, &path, &control
+            &trajectory, &start, &velocity, &path, &control, &states
         ](const ros::TimerEvent&){
             Eigen::Vector3d vel;
             double t = (ros::Time::now() - path.header.stamp).toSec();
@@ -238,7 +228,7 @@ int main(int argc, char* argv[])
                 vel.setZero();
             else
                 vel = trajectory.vel(t);
-
+            states[0].col(1) = vel;
             double sin = std::sin(start.yaw), cos = std::cos(start.yaw);
             velocity.linear.x = cos * vel[0] + sin * vel[1];
             velocity.linear.y = cos * vel[1] - sin * vel[0];
