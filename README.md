@@ -6,7 +6,7 @@ __GFM-Planner__ is a LiDAR-based perception-aware trajectory planner that improv
 
 __GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric__. Accepted by __IROS 2025__. The full paper will be published soon.
 
-Authors: [Yue Lin](https://github.com/Yue-0), Xiaoxuan Zhang, Yang Liu, Dong Wang and Huchuan Lu.
+Authors: [Yue Lin](https://github.com/Yue-0), [Xiaoxuan Zhang](https://github.com/Zhxx-R), Yang Liu, Dong Wang and Huchuan Lu.
 
 ## Video
 
@@ -14,7 +14,9 @@ https://github.com/user-attachments/assets/859af1e7-2bbc-4ee0-b38c-bcda333494cf
 
 ## Quick Start
 
-This project needs to run under Ubuntu20.04 & ROS-noetic.
+In Ubuntu20.04 & ROS-noetic:
+
+__Step 1__: Clone this project and build.
 
 ```shell
 git clone https://github.com/Yue-0/GFM-Planner.git
@@ -23,20 +25,20 @@ cd GFM-Planner
 catkin_make
 ```
 
-Build the map for Gazebo simulation and metric evaluation:
+__Step 2__: Build the map for Gazebo simulation and metric evaluation, this would take a while.
 
 ```shell
 source devel/setup.bash
 roslaunch simulator build.launch
 ```
 
-Start the simulation environment:
+__Step 3__: Start the simulation environment.
 
 ```shell
 roslaunch simulator simulation.launch
 ```
 
-Launch the planner in another terminal:
+And launch the planner in another terminal:
 
 ```shell
 roslaunch planner planning.launch
