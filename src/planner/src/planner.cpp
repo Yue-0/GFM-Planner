@@ -209,9 +209,9 @@ int main(int argc, char* argv[])
                 pose.header.stamp = path.header.stamp;
                 Eigen::VectorXd pos = trajectory.pos(t);
                 pose.header.frame_id = path.header.frame_id;
-                pose.pose.orientation = tf::createQuaternionMsgFromYaw(pos[2]);
-                pose.pose.position.x = pos[0];
-                pose.pose.position.y = pos[1];
+                pose.pose.orientation = tf::createQuaternionMsgFromYaw(pos.z());
+                pose.pose.position.x = pos.x();
+                pose.pose.position.y = pos.y();
                 path.poses.push_back(pose);
             }
             visualizer.publish(path);
@@ -230,9 +230,9 @@ int main(int argc, char* argv[])
                 vel = trajectory.vel(t);
             states[0].col(1) = vel;
             double sin = std::sin(start.yaw), cos = std::cos(start.yaw);
-            velocity.linear.x = cos * vel[0] + sin * vel[1];
-            velocity.linear.y = cos * vel[1] - sin * vel[0];
-            velocity.angular.z = vel[2];
+            velocity.linear.x = cos * vel.x() + sin * vel.y();
+            velocity.linear.y = cos * vel.y() - sin * vel.x();
+            velocity.angular.z = vel.z();
             control.publish(velocity);
         }
     );

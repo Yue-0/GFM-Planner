@@ -101,6 +101,7 @@ namespace gfm_planner
         cv::Mat& map, SE2 start, SE2 goal
     ){
         /* Initialize arrays and queue */
+        int index;
         std::vector<SE2> path;
         initialize(map.cols * map.rows, false);
         std::priority_queue<std::pair<double, int>> queue;
@@ -124,8 +125,7 @@ namespace gfm_planner
         }
 
         /* Push the first point into the queue */
-        int index = encode(x0, y0);
-        a[index] = z0; visited[index] = true;
+        a[index = encode(x0, y0)] = z0;
         g[index] = metric->evaluate(x0, y0, z0, fov);
         queue.push(std::make_pair(-f(g[index]), index));
 
@@ -133,8 +133,12 @@ namespace gfm_planner
         while(!queue.empty())
         {
             /* Dequeue a point */
-            decode(index = queue.top().second);
-            visited[index] = true; queue.pop();
+            decode(index = queue.top().second); queue.pop();
+
+            /* Check visited */
+            if(visited[index])
+                continue;
+            visited[index] = true;
 
             /* If found a path */
             if(x0 == xg && y0 == yg)

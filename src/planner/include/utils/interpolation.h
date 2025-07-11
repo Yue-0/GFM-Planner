@@ -1,7 +1,7 @@
 /* @author: YueLin */
 
-#ifndef __INTER
-#define __INTER
+#ifndef interpolation
+#define interpolation interpolation1
 
 #include <math.h>
 
@@ -19,8 +19,8 @@ inline void interpolation1(double x, int* x1, int* x2, double* u, double* v)
 inline void interpolation2(double x, int* x1, int* x2, double* u, double* u_,
                            double y, int* y1, int* y2, double* v, double* v_)
 {
-    interpolation1(x, x1, x2, u, u_);
-    interpolation1(y, y1, y2, v, v_);
+    interpolation(x, x1, x2, u, u_);
+    interpolation(y, y1, y2, v, v_);
 }
 
 inline void interpolation3(double x, int* x1, int* x2, double* u, double* u_,

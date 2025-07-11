@@ -206,7 +206,7 @@ namespace gfm_planner
                 }
 
                 /* Angular velocity penalty */
-                point[0] = states[1][2];
+                point[0] = states[1].z();
                 if((p = point[0] * point[0] - vm[1] * vm[1]) > 0)
                 {
                     costs[1] += g * p * times[i];
@@ -214,7 +214,7 @@ namespace gfm_planner
                                               * times[i] 
                                               * point[0]
                                               * beta.col(1);
-                    dt[i] += g * (p + 2 * t[1] * point[0] * states[2][2]);
+                    dt[i] += g * (p + 2 * t[1] * point[0] * states[2].z());
                 }
 
                 /* Acceleration penalty */
@@ -228,7 +228,7 @@ namespace gfm_planner
                 }
 
                 /* Angular acceleration penalty */
-                point[0] = states[2][2];
+                point[0] = states[2].z();
                 if((p = point[0] * point[0] - am[1]) > 0)
                 {
                     costs[1] += g * p * times[i];
@@ -236,7 +236,7 @@ namespace gfm_planner
                                               * times[i] 
                                               * point[0]
                                               * beta.col(2);
-                    dt[i] += g * (p + 2 * t[1] * point[0] * states[3][2]);
+                    dt[i] += g * (p + 2 * t[1] * point[0] * states[3].z());
                 }
 
                 /* Safety penalty */
