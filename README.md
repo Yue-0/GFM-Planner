@@ -4,13 +4,13 @@ __GFM-Planner__ is a LiDAR-based perception-aware trajectory planner that improv
 
 ## Paper
 
-__GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric__. Accepted by __IROS 2025__.
+__[GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric](http://arxiv.org/abs/2507.16233)__. Accepted by __IROS 2025__.
 
 Authors: [Yue Lin](https://github.com/Yue-0), [Xiaoxuan Zhang](https://github.com/Zhxx-R), Yang Liu, Dong Wang and Huchuan Lu.
 
 ## Video
 
-https://github.com/user-attachments/assets/859af1e7-2bbc-4ee0-b38c-bcda333494cf
+https://github.com/user-attachments/assets/27312007-2d57-4e55-a649-f9b6526d7c70
 
 ## Quick Start
 
