@@ -7,32 +7,22 @@ namespace gfm_planner
     PerceptionAwareOptimizer::PerceptionAwareOptimizer(
         GeometricFeatureMetric* gfm,
         MINCO* trajectory, ESDF* sdf,
-        double delta, double step, int memory,
-        double ds, double time, double range, int k,
+        double ds, double time, double range,
+        int pst, int m, int iteration, int k, 
+        double e, double step, double d, double ep, double w, double a,
         double lambda_s, double rho, double lambda_l, double lambda_p,
         double max_vel, double max_acc, double max_omega, double max_alpha
-    ){
-        /* Objects */
-        esdf = sdf;
-        metric = gfm;
-        minco = trajectory;
-
-        safe = ds;        // Safe distance
-        kappa = k;        // Interval for numerical integration
-        fov = range;      // Scanning range of LiDAR
-        duration = time;  // The maximum duration of each piece
-
-        /* Optimization parameters */
-        bfgs.delta = delta;
-        bfgs.g_epsilon = 0;
-        bfgs.min_step = step;
-        bfgs.mem_size = memory;
-
-        /* Weights of cost */
-        wt = rho;
-        ws = lambda_s;
-        wl = lambda_l;
-        wp = lambda_p;
+    ): 
+        esdf(sdf), minco(trajectory), metric(gfm),
+        fov(range), safe(ds), duration(time),
+        ws(lambda_s), wt(rho), wl(lambda_l), wp(lambda_p),
+        past(pst), mem(m), iterations(iteration), kappa(k),
+        eps(e), steps(step), delta(d), epsilon(ep), wolfe(w), armijo(a)
+    {
+        /* Allocate memory for L-BFGS */
+        pf = Eigen::VectorXd::Zero(pst);
+        limit = Eigen::VectorXd::Zero(m);
+        memory = Eigen::VectorXd::Zero(m);
 
         /* Kinematic limits */
         vm[0] = max_vel;
@@ -48,8 +38,7 @@ namespace gfm_planner
         forward(var, tau, points);
 
         /* Optimization */
-        double value;
-        lbfgs::lbfgs_optimize(var, value, cost, nullptr, nullptr, this, bfgs);
+        double value = lbfgs(var);
 
         /* Get the optimal points and times */
         backward(var);
@@ -266,34 +255,153 @@ namespace gfm_planner
         *constraint = *(costs + 1);
     }
 
-    double PerceptionAwareOptimizer::cost(void* perception_optimizer, 
-                                          const Eigen::VectorXd& x, 
+    double PerceptionAwareOptimizer::cost(const Eigen::VectorXd& x, 
                                           Eigen::VectorXd& gradient)
     {
         double costs[3];
-        
-        PerceptionAwareOptimizer* 
-        optim = reinterpret_cast<
-        PerceptionAwareOptimizer*
-        > (perception_optimizer);
 
-        optim->backward(x);
+        backward(x);
+        minco->diffeomorphism(tau, times, true);
+        minco->set(points, times);
 
-        optim->minco->diffeomorphism(optim->tau, optim->times, true);
-        optim->minco->set(optim->points, optim->times);
-
-        *costs = optim->minco->cost(optim->dc, optim->dt, optim->ws, optim->wt);
-        optim->penalty(costs + 2, costs + 1);
+        *costs = minco->cost(dc, dt, ws, wt);
+        penalty(costs + 2, costs + 1);
 
         // std::cout << "energy: " << costs[0] << std::endl;
         // std::cout << "metric: " << costs[1] << std::endl;
         // std::cout << "penalty: " << costs[2] << std::endl;
         
-        optim->minco->propogate(optim->dc, optim->dt, optim->dp, optim->dv);
-        optim->minco->propogate(optim->tau, optim->dv, optim->dv);
-
-        optim->forward(gradient, optim->dv, optim->dp);
+        minco->propogate(dc, dt, dp, dv);
+        minco->propogate(tau, dv, dv);
+        forward(gradient, dv, dp);
 
         return costs[0] + costs[1] + costs[2];
+    }
+
+    double PerceptionAwareOptimizer::lbfgs(Eigen::VectorXd& x)
+    {
+        /* Prepare intermediate variables */
+        const int n = x.size();
+        Eigen::VectorXd g(n), x0(n), g0(n);
+
+        /* Initialize the limited memory */
+        limit.setZero(); memory.setZero();
+        Eigen::MatrixXd s = Eigen::MatrixXd::Zero(n, mem);
+        Eigen::MatrixXd y = Eigen::MatrixXd::Zero(n, mem);
+
+        /* Evaluate the function value and its gradient */
+        double fx = pf[0] = cost(x, g); 
+        Eigen::VectorXd d = -g;
+
+        if(!convergance(x, g))
+        {
+            int iter = 1, end = 0, bound = 0;
+            double step = 1. / d.norm();
+            while(true)
+            {
+                /* Store the current position and gradient vectors */
+                x0 = x; g0 = g;
+
+                /* Lewis-Overton line search */
+                if(step >= steps) step = steps * 0.5;
+                if(!search(x, &fx, g, &step, d, x0, g0))
+                {
+                    x = x0; g = g0; break;
+                }
+
+                /* Convergance test */
+                if(convergance(x, g))
+                    break;
+
+                /* Test for stopping criterion */
+                if(iter >= past && 
+                   std::fabs(pf[iter % past] - fx) / 
+                   std::max(std::fabs(fx), 1.) < delta) break;
+                pf[iter++ % past] = fx;
+
+                /* L-BFGS update */
+                d = -g;
+                s.col(end) = x - x0;
+                y.col(end) = g - g0;
+
+                /* Cautious update */
+                double yty = y.col(end).squaredNorm();
+                double yts = memory[end] = y.col(end).dot(s.col(end));
+                if(yts > eps * s.col(end).squaredNorm() * g0.norm())
+                {
+                    int _;
+                    int j = end = (end + 1) % mem;
+                    bound = std::min(mem, bound + 1);
+                    for(_ = bound; _; --_)
+                    {
+                        j = (j + mem - 1) % mem;
+                        limit[j] = s.col(j).dot(d) / memory[j];
+                        d -= limit[j] * y.col(j);
+                    }
+                    d *= yts / yty;
+                    for(_ = bound; _; --_)
+                    {
+                        d += (limit[j] - y.col(j).dot(d) / memory[j]) * s.col(j)
+                        ;j = (j + 1) % mem;
+                    }
+                }
+                step = 1;
+            }
+        }
+        return fx;
+    }
+
+    bool PerceptionAwareOptimizer::search(Eigen::VectorXd& x, double* value,
+                                          Eigen::VectorXd& g, double* step,
+                                          const Eigen::VectorXd& direction,
+                                          const Eigen::VectorXd& x0,
+                                          const Eigen::VectorXd& g0)
+    {
+        int iter = 0;
+        bool ac = false, touched = false;
+        double min = 0, max = steps, fx = *value;
+
+        /* Compute the initial gradient in the search direction */
+        double grad = g0.dot(direction);
+        if(grad > 0) return false;
+        const double w = wolfe * grad;
+        const double a = armijo * grad;
+
+        /* Line search */
+        while(true)
+        {
+            /* Evaluate the function and gradient values */
+            *value = cost(x = x0 + *step * direction, g);
+            if(std::isinf(*value) || std::isnan(*value))
+                return false;
+            
+            /* Check the Armijo condition */
+            if(*step * a < *value - fx)
+            {
+                max = *step; ac = true;
+            }
+            /* Check the waek Wolfe condition */
+            else if(w > g.dot(direction))
+                min = *step;
+            else
+                return true;
+            
+            /* Maximum number of iteration */
+            if(++iter >= iterations) return false;
+
+            /* Relative interval width is at least machine precision */
+            if(ac && (max - min) < max * 1e-16) return false;
+
+            /* Update step */
+            if(ac) *step = (min + max) / 2; else *step *= 2;
+            if(*step < 1. / steps) return false;
+            if(*step > steps)
+            {
+                if(touched) 
+                    return false;
+                touched = true;
+                *step = steps;
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ __GFM-Planner__ is a LiDAR-based perception-aware trajectory planner that improv
 
 ## Paper
 
-__GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric__. Accepted by __IROS 2025__. The full paper will be published soon.
+__GFM-Planner: Perception-Aware Trajectory Planning with Geometric Feature Metric__. Accepted by __IROS 2025__.
 
 Authors: [Yue Lin](https://github.com/Yue-0), [Xiaoxuan Zhang](https://github.com/Zhxx-R), Yang Liu, Dong Wang and Huchuan Lu.
 
@@ -45,7 +45,3 @@ roslaunch planner planning.launch
 ```
 
 Use `2D Nav Goal` to specify the goal pose.
-
-## Acknowledgements
-
-We use [LBFGS-Lite](https://github.com/ZJU-FAST-Lab/LBFGS-Lite) to solve numerical optimization problems.

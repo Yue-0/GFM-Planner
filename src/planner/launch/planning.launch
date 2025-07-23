@@ -25,7 +25,6 @@
         <param name="replan_interval" value="0.1" type="double" />
         <param name="control_accuracy" value="0.35" type="double" />
 
-        <param name="kappa" value="16" type="int" />
         <param name="minco_s" value="3" type="int" />
         <param name="max_duration" value="1.0" type="double" />
         <param name="safe_distance" value="0.4" type="double" />
@@ -43,9 +42,9 @@
         <param name="max_omega" value="1.0" type="double" />
         <param name="max_alpha" value="1.0" type="double" />
 
+        <param name="lbfgs_kappa" value="16" type="int" />
         <param name="lbfgs_memory" value="256" type="int" />
         <param name="lbfgs_delta" value="1e-5" type="double" />
-        <param name="lbfgs_min_step" value="1e-32" type="double" />
 
         <param name="map_frame" value="map" type="string" />
         <param name="odom_frame" value="odom" type="string" />

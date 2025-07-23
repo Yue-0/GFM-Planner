@@ -60,17 +60,26 @@ int main(int argc, char* argv[])
     );
     gfm_planner::PerceptionAwareOptimizer optimizer(
         &gfm, &minco, &esdf,
-        nh.param("lbfgs_delta", 1e-5),
-        nh.param("lbfgs_min_step", 1e-32),
-        nh.param("lbfgs_memory", 0x100),
         nh.param("safe_distance", 0.4),
         nh.param("max_duration", 1.0),
         1 - nh.param("blind", 0.75),
-        nh.param("kappa", 0x10),
+        
+        nh.param("lbfgs_past", 3),
+        nh.param("lbfgs_memory", 8),
+        nh.param("lbfgs_iterations", 0x40),
+        nh.param("lbfgs_kappa", 16),
+        nh.param("lbfgs_eps", 1e-6),
+        nh.param("lbfgs_step", 1e20),
+        nh.param("lbfgs_delta", 1e-6),
+        nh.param("lbfgs_epsilon", 1e-5),
+        nh.param("lbfgs_wolfe", 9e-1),
+        nh.param("lbfgs_armijo", 1e-4),
+        
         nh.param("lambda_s", 1.0),
         nh.param("lambda_t", 20.0),
         nh.param("lambda_l", 1.0),
         nh.param("lambda_p", 1e4),
+        
         nh.param("max_vel", 1.0),
         nh.param("max_acc", 1.0),
         nh.param("max_omega", 1.0),
